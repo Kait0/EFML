@@ -1,8 +1,13 @@
+#-----------------------------------------------------------------------------------------
+#Imports
+#-----------------------------------------------------------------------------------------
+
 import shap as sh
 import skmultiflow as skm
 import sklearn as skl
 import numpy as np
 import pandas as pd
+import matplotlib as mp
 
 
 #-----------------------------------------------------------------------------------------
@@ -48,40 +53,47 @@ le.fit(attrib)
 train_data['workclass'] = le.transform(train_data['workclass'])
 test_data['workclass'] = le.transform(test_data['workclass'])
 
+le1 = skl.preprocessing.LabelEncoder()
 attrib = np.unique(train_data['education'])
-le.fit(attrib)
-train_data['education'] = le.transform(train_data['education'])
-test_data['education'] = le.transform(test_data['education'])
+le1.fit(attrib)
+train_data['education'] = le1.transform(train_data['education'])
+test_data['education'] = le1.transform(test_data['education'])
 
+le2 = skl.preprocessing.LabelEncoder()
 attrib = np.unique(train_data['marital-status'])
-le.fit(attrib)
-train_data['marital-status'] = le.transform(train_data['marital-status'])
-test_data['marital-status'] = le.transform(test_data['marital-status'])
+le2.fit(attrib)
+train_data['marital-status'] = le2.transform(train_data['marital-status'])
+test_data['marital-status'] = le2.transform(test_data['marital-status'])
 
+le3 = skl.preprocessing.LabelEncoder()
 attrib = np.unique(train_data['occupation'])
-le.fit(attrib)
-train_data['occupation'] = le.transform(train_data['occupation'])
-test_data['occupation'] = le.transform(test_data['occupation'])
+le3.fit(attrib)
+train_data['occupation'] = le3.transform(train_data['occupation'])
+test_data['occupation'] = le3.transform(test_data['occupation'])
 
+le4 = skl.preprocessing.LabelEncoder()
 attrib = np.unique(train_data['relationship'])
-le.fit(attrib)
-train_data['relationship'] = le.transform(train_data['relationship'])
-test_data['relationship'] = le.transform(test_data['relationship'])
+le4.fit(attrib)
+train_data['relationship'] = le4.transform(train_data['relationship'])
+test_data['relationship'] = le4.transform(test_data['relationship'])
 
+le5 = skl.preprocessing.LabelEncoder()
 attrib = np.unique(train_data['race'])
-le.fit(attrib)
-train_data['race'] = le.transform(train_data['race'])
-test_data['race'] = le.transform(test_data['race'])
+le5.fit(attrib)
+train_data['race'] = le5.transform(train_data['race'])
+test_data['race'] = le5.transform(test_data['race'])
 
+le6 = skl.preprocessing.LabelEncoder()
 attrib = np.unique(train_data['sex'])
-le.fit(attrib)
-train_data['sex'] = le.transform(train_data['sex'])
-test_data['sex'] = le.transform(test_data['sex'])
+le6.fit(attrib)
+train_data['sex'] = le6.transform(train_data['sex'])
+test_data['sex'] = le6.transform(test_data['sex'])
 
+le7 = skl.preprocessing.LabelEncoder()
 attrib = np.unique(train_data['native-country'])
-le.fit(attrib)
-train_data['native-country'] = le.transform(train_data['native-country'])
-test_data['native-country'] = le.transform(test_data['native-country'])
+le7.fit(attrib)
+train_data['native-country'] = le7.transform(train_data['native-country'])
+test_data['native-country'] = le7.transform(test_data['native-country'])
 
 
 #-----------------------------------------------------------------------------------------
@@ -91,11 +103,13 @@ test_data['native-country'] = le.transform(test_data['native-country'])
 tree = skl.tree.DecisionTreeClassifier()
 tree.fit(train_data, train_labels)
 
-predicted_labels = tree.predict(test_data)
+predicted_train_labels = tree.predict(train_data)
+predicted_test_labels  = tree.predict(test_data)
 
 #-----------------------------------------------------------------------------------------
 # Calculate accuracy
 #-----------------------------------------------------------------------------------------
+
 def test_accuracy(y_predict_, ys_test_):
     acc = 0.0
     for idx, elem in enumerate(ys_test_):
@@ -104,8 +118,34 @@ def test_accuracy(y_predict_, ys_test_):
     acc /= len(y_predict_)
     return acc
 
-accurcy = test_accuracy(predicted_labels, test_labels)
+train_accuracy = test_accuracy(predicted_train_labels, train_labels)
+test_accuracy  = test_accuracy(predicted_test_labels, test_labels)
 
-print("Accuracy: ",accurcy)
+
+print("train_accuracy: ", train_accuracy)
+print("test_accuracy: ",  test_accuracy)
+
+#-----------------------------------------------------------------------------------------
+# Explain Model
+#-----------------------------------------------------------------------------------------
+explainer = sh.TreeExplainer(tree)
+shap_values = explainer.shap_values(test_data)
+
+#-----------------------------------------------------------------------------------------
+# Reverse labels so we know what they mean
+#-----------------------------------------------------------------------------------------
+test_data['workclass']      = le.inverse_transform(test_data['workclass'])
+test_data['education']      = le1.inverse_transform(test_data['education'])
+test_data['marital-status'] = le2.inverse_transform(test_data['marital-status'])
+test_data['occupation']     = le3.inverse_transform(test_data['occupation'])
+test_data['relationship']   = le4.inverse_transform(test_data['relationship'])
+test_data['race']           = le5.inverse_transform(test_data['race'])
+test_data['sex']            = le6.inverse_transform(test_data['sex'])
+test_data['native-country'] = le7.inverse_transform(test_data['native-country'])
+
+#-----------------------------------------------------------------------------------------
+# Show explanations
+#-----------------------------------------------------------------------------------------
+sh.force_plot(explainer.expected_value[0], shap_values[0][0], test_data.iloc[0,:], matplotlib=True)
 
 print("Done :)")
