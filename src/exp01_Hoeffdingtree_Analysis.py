@@ -97,15 +97,23 @@ test_data['native-country'] = le7.transform(test_data['native-country'])
 
 
 #-----------------------------------------------------------------------------------------
-# Train Model
+# Train Decision Tree Model
 #-----------------------------------------------------------------------------------------
 
 tree = skl.tree.DecisionTreeClassifier()
-tree.fit(train_data, train_labels)
+tree.fit(train_data.to_numpy(), train_labels.to_numpy())
 
-predicted_train_labels = tree.predict(train_data)
-predicted_test_labels  = tree.predict(test_data)
+predicted_train_labels = tree.predict(train_data.to_numpy())
+predicted_test_labels  = tree.predict(test_data.to_numpy())
 
+#-----------------------------------------------------------------------------------------
+# Train Hoeffding Tree Model
+#-----------------------------------------------------------------------------------------
+h_tree = skm.trees.HoeffdingTree()
+h_tree.fit(train_data.to_numpy(), train_labels.to_numpy())
+
+predicted_h_train_labels = h_tree.predict(train_data.to_numpy())
+predicted_h_test_labels  = h_tree.predict(test_data.to_numpy())
 #-----------------------------------------------------------------------------------------
 # Calculate accuracy
 #-----------------------------------------------------------------------------------------
@@ -118,18 +126,24 @@ def test_accuracy(y_predict_, ys_test_):
     acc /= len(y_predict_)
     return acc
 
-train_accuracy = test_accuracy(predicted_train_labels, train_labels)
-test_accuracy  = test_accuracy(predicted_test_labels, test_labels)
+train_acc = test_accuracy(predicted_train_labels, train_labels)
+test_acc  = test_accuracy(predicted_test_labels, test_labels)
+
+h_train_accuracy = test_accuracy(predicted_h_train_labels, train_labels)
+h_test_accuracy  = test_accuracy(predicted_h_test_labels, test_labels)
 
 
-print("train_accuracy: ", train_accuracy)
-print("test_accuracy: ",  test_accuracy)
+print("Decision Tree: train_accuracy: ", train_acc)
+print("Decision Tree: test_accuracy: ",  test_acc)
+
+print("HoeffdingTree: train_accuracy: ", h_train_accuracy)
+print("HoeffdingTree: test_accuracy: ",  h_test_accuracy)
 
 #-----------------------------------------------------------------------------------------
 # Explain Model
 #-----------------------------------------------------------------------------------------
-explainer = sh.TreeExplainer(tree)
-shap_values = explainer.shap_values(test_data)
+#explainer = sh.TreeExplainer(tree)
+#shap_values = explainer.shap_values(test_data)
 
 #-----------------------------------------------------------------------------------------
 # Reverse labels so we know what they mean
@@ -146,6 +160,6 @@ test_data['native-country'] = le7.inverse_transform(test_data['native-country'])
 #-----------------------------------------------------------------------------------------
 # Show explanations
 #-----------------------------------------------------------------------------------------
-sh.force_plot(explainer.expected_value[0], shap_values[0][0], test_data.iloc[0,:], matplotlib=True)
+#sh.force_plot(explainer.expected_value[0], shap_values[0][0], test_data.iloc[0,:], matplotlib=True)
 
 print("Done :)")
