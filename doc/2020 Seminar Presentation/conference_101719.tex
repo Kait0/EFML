@@ -107,6 +107,75 @@ copy& More table copy$^{\mathrm{a}}$& &  \\
 
 \section{Reproducibility Considerations}
 
+\subsection{Software Libraries:}
+The software library versions we used (read out using pip --freeze) are documented in table \ref{softwareVersion}.\\
+All experiments were conducted on a single personal computer. The hardware specs can be found in table \ref{hardware}.\\
+
+
+%TODO this are too many remove the uneccesary once.
+\begin{table}[htbp]
+\caption{Software Library Versions}
+\begin{center}
+\begin{tabular}{|c|c|}
+	\hline
+	\textbf{Software library} & \textbf{Version} \\
+	\hline
+	Python & 3.7.4\\ \hline
+	anaconda-client & 1.7.2 \\ \hline
+	anaconda-navigator & 1.9.7 \\ \hline
+	anaconda-project & 0.8.3\\ \hline
+	conda & 4.7.12\\ \hline
+	conda-build & 3.18.9\\ \hline
+	conda-package-handling & 1.6.\\ \hline0
+	conda-verify & 3.4.2\\ \hline
+	ipykernel & 5.1.2\\ \hline
+	ipython & 7.8.0\\ \hline
+	ipython-genutils & 0.2.0\\ \hline
+	jupyter & 1.0.0\\ \hline
+	jupyter-client & 5.3.3\\ \hline
+	jupyter-console & 6.0.0\\ \hline
+	jupyter-core & 4.5.0\\ \hline
+	jupyterlab & 1.1.4\\ \hline
+	jupyterlab-server & 1.0.6\\ \hline
+	matplotlib & 3.1.1\\ \hline
+	notebook & 6.0.1\\ \hline
+	numpy & 1.16.5\\ \hline
+	pandas & 0.25.1\\ \hline
+	scikit-image & 0.15.0\\ \hline
+	scikit-learn & 0.21.3\\ \hline
+	scikit-multiflow & 0.4.1\\ \hline
+	scipy & 1.3.1\\ \hline
+	shap & 0.35.0\\ \hline
+	sklearn & 0.0\\ \hline
+	torch & 1.5.0+cu101\\ \hline
+	torchvision & 0.6.0+cu101  \\ \hline
+	
+\end{tabular}
+\label{softwareVersion}
+\end{center}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Hardware Specifications:}
+\begin{center}
+\begin{tabular}{|c|c|}
+	\hline
+	\textbf{Component} & \textbf{Model} \\
+	\hline
+	Processor & Intel Core i7-6700 CPU\\ \hline
+	RAM & 16 GB Corsair Vengeance LPX DDR4-2400\\ \hline
+	GPU & NVIDIA GeForce GTX 980 \\ \hline
+	Motherboard & ASUS Z170 Pro Gaming \\ \hline
+	Operating system & Microsoft Windows 10 Education N \\ \hline
+	Hard Drive & SSD Crucial MX200 \\ \hline
+\end{tabular}
+\label{hardware}
+\end{center}
+\end{table}
+
+
+
+
 \section*{Acknowledgment}
 
 The preferred spelling of the word ``acknowledgment'' in America is without 
@@ -116,24 +185,7 @@ acknowledgments in the unnumbered footnote on the first page.
 
 \section*{References}
 
-Please number citations consecutively within brackets \cite{b1}. The 
-sentence punctuation follows the bracket \cite{b2}. Refer simply to the reference 
-number, as in \cite{b3}---do not use ``Ref. \cite{b3}'' or ``reference \cite{b3}'' except at 
-the beginning of a sentence: ``Reference \cite{b3} was the first $\ldots$''
-
-Number footnotes separately in superscripts. Place the actual footnote at 
-the bottom of the column in which it was cited. Do not put footnotes in the 
-abstract or reference list. Use letters for table footnotes.
-
-Unless there are six authors or more give all authors' names; do not use 
-``et al.''. Papers that have not been published, even if they have been 
-submitted for publication, should be cited as ``unpublished'' \cite{b4}. Papers 
-that have been accepted for publication should be cited as ``in press'' \cite{b5}. 
-Capitalize only the first word in a paper title, except for proper nouns and 
-element symbols.
-
-For papers published in translation journals, please give the English 
-citation first, followed by the original foreign-language citation \cite{b6}.
+Please number citations consecutively within brackets \cite{b1}.
 
 \begin{thebibliography}{00}
 \bibitem{b1} G. Eason, B. Noble, and I. N. Sneddon, ``On certain integrals of Lipschitz-Hankel type involving products of Bessel functions,'' Phil. Trans. Roy. Soc. London, vol. A247, pp. 529--551, April 1955.
