@@ -27,7 +27,14 @@
 \maketitle
 
 \begin{abstract}
-Understanding the decisions made by machine learning models can be challenging due to their black box nature. We investigate the additive feature attribution method SHAP (SHapley Additive exPlanations) that addresses this problem \cite{b2}. While SHAP can be used to explain the decisions of any model, the generic KernelSHAP algorithm for it can be intractable for larger datasets. For tree models there exists a specialized algorithm (Tree SHAP) that can compute exact SHAP values in polynomial time \cite{b1}. We use the SHAP framework to investigate the relationship between Decision Trees and Hoeffding Trees\cite{b3}. Theory tells us that a Hoeffding Tree should converge towards a Decision Tree when trained. In our experiments however we could not observe convergence. The reason for this remains unclear.
+Understanding the decisions made by machine learning models can be challenging due to their black box nature.
+We investigate the additive feature attribution method SHAP (SHapley Additive exPlanations) that addresses this problem \cite{b2}. 
+While SHAP can be used to explain the decisions of any model, the generic KernelSHAP algorithm for it can be intractable for larger datasets. 
+For tree models there exists a specialized algorithm (Tree SHAP) that can compute exact SHAP values in polynomial time \cite{b1}. 
+We use the SHAP framework to investigate the relationship between Decision Trees and Hoeffding Trees\cite{b3}. 
+Theory tells us that a Hoeffding Tree should converge towards a Decision Tree when trained. 
+In our experiments however we could not observe convergence. 
+The reason for this remains unclear.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -37,6 +44,59 @@ Tree SHAP, SHAP, Decision Tree, Hoeffding Tree
 \section{Introduction}
 This . This  and \cite{b3} document is a model and instructions for \LaTeX.
 Please observe the conference page limits. 
+
+\section{Additive Feature Attribution methods}
+Modern models of Machine Learning have become increasingly complex making it hard to explain their decisions.
+To address this challenge we can go one layer of abstraction further and make a model of the model which we want to be simple enough to be interpretable again.
+In \cite{b2} they coined the term explanation model for this approach of using an interpretable approximation of the original model.\\
+When viewed trough this lens multiple of the current explanation methods can be categorized in the class of  \textbf{Additive Feature Attribution methods}. In \cite{b2} they defined this as methods having an explanation model that is a linear function of binary variables:\\
+
+\begin{align}
+	g(z') = \phi_0 + \sum_{i=1}^{M}\phi_i z_{i}'
+\end{align}
+
+Where g is the explanation model, $z' \in \{0,1\}^M, \phi \in \mathbb{R}$. \\
+\textit{Local methods} like this first approximate their model $f(x)$ using \textit{simplified inputs} $x'$ where $x = h_x(x')$.\\
+The objective is then to ensure $g(z') \approx f(h_x(z'))$ whenever $z' \approx x'$. \\
+$\phi_i$ is then called the \textbf{effect} of feature i and summing up all effects approximates the output of the model $f(x)$ we wish to explain. Note that these \textit{explanation models} are now easily interpretable. We can for a prediction $f(x)$ given input $x$  say what influence or effect each component $x_i$ had on the final decision.\\
+Methods falling in the category of Additive Feature Attribution methods include LIME \cite{b4}, DeepLIFT\cite{b5}, layer-wise relevance propagation \cite{b6}, Quantitive Input Influence \cite{b7}, Shapley sampling values \cite{b8} and SHAP \cite{b2}.\\
+
+Additive Feature Attribution methods can have 3 desirable theoretical properties \cite{b2}:\\
+
+\textbf{Local Accuracy}: \\
+\begin{align}
+f(x) = g(x') when x = h_x(x') and \phi_0 = f(h_x(0))
+\end{align}
+The intuition being that the explanation model should match the original model for the simplified input (notice $x' = z'$ here). \\
+
+\textbf{Missingness}: \\
+\begin{align}
+x'_i = 0 \rightarrow \phi_i = 0
+\end{align}
+The intuition is that feature missing in the original input may have no impact even if they are present in the simplified version. (Notice that even if $x' = 0$, $z'$ does not necessarily have to be 0).\\
+
+\textbf{Consistency}: \\
+$f_x(z') := f(h_x(z'))$, and let $z' \setminus i$ be $z'_i = 0$\\
+For any two models f and f', if:
+\begin{align}
+f'_x(z') - f'_x(z' \setminus i) \geq f_x(z') - f_x(z' \setminus i)
+\end{align}
+for all inputs $z' \in {0,1}^M$. \\
+Meaning that the model changes in a way that some simplified input's contribution becomes larger.\\
+Then: $ \phi_i(f', x) \geq \phi_i(f,x)$ \\
+Meaning that it's inputs attribution should not become smaller.\\
+
+Now it turns out that the only possible features for an Additive Feature attribution method that satisfies all 3 properties are the Shapley values defined as:\\
+\begin{align}
+\phi_i(f, x) = \sum_{z' \subseteq x'} \frac{|z'|!(M - |z'| - 1)!}{M!}[f_x(z') - f_x(z' \setminus i)]
+\end{align}
+$z' \subseteq x'$ are all $z'$ vectors where the non-zero entries are a subset of the non-zero entries in $x'$.\\
+$|z'|$ represents the number of non-zero entries in $z'$.\\
+
+This means that at least in theory Additive Feature Attribution methods using Shapley Values as effects are to be preferred over other methods. 
+In practice methods using shapely values can be intractable for larger sets.\\
+In the next section we will introduce the SHAP framework which tries to unify these measures of feature importance.
+%TODO check these statements after writing the next section.
 
 \section{SHAP values}
 
@@ -182,13 +242,17 @@ an ``e'' after the ``g''. Avoid the stilted expression ``one of us (R. B.
 G.) thanks $\ldots$''. Instead, try ``R. B. G. thanks$\ldots$''. Put sponsor 
 acknowledgments in the unnumbered footnote on the first page.
 
-\section*{References}
-
 \begin{thebibliography}{00}
 \bibitem{b1} Scott M. Lundberg, Gabriel G. Erion, Su-In Lee:
 Consistent Individualized Feature Attribution for Tree Ensembles. CoRR abs/1802.03888 (2018).
 \bibitem{b2} Scott M. Lundberg, Su-In Lee: A Unified Approach to Interpreting Model Predictions. NIPS 2017: 4765-4774.
 \bibitem{b3} Pedro M. Domingos, Geoff Hulten: Mining high-speed data streams. KDD 2000: 71-80
+\bibitem{b4} Marco Túlio Ribeiro, Sameer Singh, Carlos Guestrin: "Why Should I Trust You?": Explaining the Predictions of Any Classifier. KDD 2016: 1135-1144.
+\bibitem{b5} Avanti Shrikumar, Peyton Greenside, Anshul Kundaje: Learning Important Features Through Propagating Activation Differences. ICML 2017: 3145-3153.
+\bibitem{b6} Alexander Binder, Grégoire Montavon, Sebastian Bach, Klaus-Robert Müller, Wojciech Samek: Layer-wise Relevance Propagation for Neural Networks with Local Renormalization Layers. CoRR abs/1604.00825 (2016).
+\bibitem{b7}Anupam Datta, Shayak Sen, Yair Zick: Algorithmic Transparency via Quantitative Input Influence: Theory and Experiments with Learning Systems. IEEE Symposium on Security and Privacy 2016: 598-617.
+\bibitem{b8}Erik Strumbelj, Igor Kononenko: Explaining prediction models and individual predictions with feature contributions. Knowl. Inf. Syst. 41(3): 647-665 (2014).
+
 \end{thebibliography}
 
 \end{document}
