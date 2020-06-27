@@ -8,7 +8,7 @@
 \usepackage{xcolor}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-
+\DeclareMathOperator*{\argmin}{\arg\!\min}
 
     
 \begin{document}
@@ -87,7 +87,7 @@ Then: $ \phi_i(f', x) \geq \phi_i(f,x)$ \\
 Meaning that it's inputs attribution should not become smaller.\\
 
 Now it turns out that the only possible features for an Additive Feature attribution method that satisfies all 3 properties are the Shapley values defined as:\\
-\begin{align}
+\begin{align}\label{ShapleyEquation}
 \phi_i(f, x) = \sum_{z' \subseteq x'} \frac{|z'|!(M - |z'| - 1)!}{M!}[f_x(z') - f_x(z' \setminus i)]
 \end{align}
 $z' \subseteq x'$ are all $z'$ vectors where the non-zero entries are a subset of the non-zero entries in $x'$.\\
@@ -99,6 +99,47 @@ In the next section we will introduce the SHAP framework which tries to unify th
 %TODO check these statements after writing the next section.
 
 \section{SHAP values}
+SHAP (SHapley Additive exPlanations) values \cite{b2} are obtained by solving equation \ref{ShapleyEquation} using a conditional expectation function of the original model:
+\begin{align}
+f(h_x(z')) = E[f(z) | z_S]
+\end{align}
+S is the set of non-zero indexes in $z'$. 
+The mapping function is therefore implicitly defined as:\\
+\begin{align}
+h_x(z') = z_S
+\end{align}
+$z_S$ has missing values for features not in the set S.\\
+One problem with this approach is that in general models don't can't necessarily handle features that are just missing.\\
+To address this issue $f(z_S)$ can be approximated with $E[f(z)| z_S].$\\
+The intuition being that SHAP values  calculate the attribution (or effect) of each feature using the change in expectation of the model prediction when you condition on that feature. 
+The feature $\phi_0 = E[f(z)]$ is the base value or the prediction the model would make if it had no observation. 
+The following $\phi_i$ are then calculated by conditioning on some input features and averaging over all possible orderings of them.
+As hinted already earlier the exact computation of SHAP values can be challenging as it requires to calculate combinatory many expectations. 
+Assuming feature independence (equation \ref{independence}) and model linearity (equation \ref{linearity}) can make the computation much easier. 
+\begin{align}
+f(h_x(z')) &= E[f(z)|z_{S}]\\
+&= E_{z_{\overline{S}}|z_S}[f(z)]\\
+&\approx E_{z_{\overline{S}}}[f(z)] \label{independence}\\ 
+&\approx f([z_S, E[z_{\overline{S}}])  \label{linearity}
+\end{align}
+It allows you to 
+These are however strong assumptions as most modern models are non-linear and features are in general not independent of each other (e.g. a pixel value only has a meaningful interpretation when put into the context of the surrounding pixels).\\
+In the following subsections we will discuss algorithms for computing SHAP values.
+
+\subsection{Kernel SHAP (Linear Lime + Shapely Value)}
+Kernel SHAP \cite{b2} is the only method presented here that can be applied to any model.
+Linear Lime is a method that minimizes the following objective function:
+\begin{align}
+\xi = \argmin_{g \in G} L(f,g,\pi_{x'}) + \Omega(g) \label{Lime}
+\end{align}
+Lime is a local linear explanation model that locally approximates the model around a given prediction.
+Kernel SHAP now chooses $\Omega, \pi$ and $L$ in a way that recovers the Shapely Values (and therefore guarantees the properties missingness, local accuracy and consistency). This is possible because LIME is a additive feature attribution method. This lead to the following equations:
+\begin{align}
+\Omega(g) &= 0\\
+\pi_{x'}(z') &= \frac{(M - 1}{(M choose |z'|)|z'|(M - |z'|)1}\\
+L(f,g,\pi_{x'}) &= \sum_{z' \in Z}[f(h_x(z')) - g(z')]^2 \pi_{x'}(z')
+\end{align}
+Because the loss is quadratic and $g(z')$ is assumed to be linear we can solve equation \ref{Lime} using linear regression (and calculate the shapely values using weighted linear regression). The input mapping used by LIME is equivalent to equation \ref{linearity} and we can therefore use Kernel SHAP on every model.
 
 \section{Decision and Hoeffding Trees}
 
