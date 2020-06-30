@@ -142,13 +142,28 @@ L(f,g,\pi_{x'}) &= \sum_{z' \in Z}[f(h_x(z')) - g(z')]^2 \pi_{x'}(z')
 Because the loss is quadratic and $g(z')$ is assumed to be linear we can solve equation \ref{Lime} using linear regression (and calculate the shapely values using weighted linear regression). 
 The input mapping used by LIME is equivalent to equation \ref{linearity} and we can therefore use Kernel SHAP on every model.
 The simplified input mapping $h_x(z')$ that LIME uses is equivalent to equation \ref{linearity} which leads to estimation of the SHAP values.\\
-To summarize Kernel SHAP is a model agnostic algorithm that under the (strong) assumptions model linearity and feature independence approximates the SHAP values. The time complexity of the algorithm is exponential in the number of input features M. In the original paper the time complexity was stated as $O(2^M + M^3)$ \cite{b2}. The ALIBI implementation of the algorithm claims $O(M2^M)$ as time complexity. \cite{b9}\\
+To summarize Kernel SHAP is a model agnostic algorithm that under the (strong) assumptions model linearity and feature independence approximates the SHAP values. The time complexity of the algorithm is exponential in the number of input features M : $O(M2^M)$\cite{b2}.\\
 An additional problem that arises in practice is that most models can not handle arbitrary patterns of missing inputs at inference time (which is a requirement to compute the Shapley values).
 Implementation of the algorithm therefore make further approximations by replacing missing features with random values from a background dataset provided by the user (e.g. the training set). 
 Given these severe flaws one can question whether the explanations provided by Kernel SHAP can be trusted in a realistic setting.\\
-Better algorithms for calculating SHAP values for specific model types exist and will be covered in the following subsections:\\
+Better algorithms for calculating SHAP values for specific model types exist. Some of which will be covered in the following subsections:\\
 
 \subsection{Linear SHAP}
+For a linear model $f(x) = \sum_{j=1}^M w_j x_j + b$ you can approximate the SHAP values by only assuming feature independence (equation \ref{independence}).
+The features will then be:
+\begin{align}
+\phi_0(f,x) = b
+\phi_i(f,x) = w_j(x_j - E[x_j]) 
+\end{align}
+Notice that the difference to just looking at the weights is that Linear SHAP takes the difference to the baseline into account.
+
+\subsection{Deep SHAP}
+Deep SHAP \cite{b2} is an algorithm that combines shapely values with DeepLIFT \cite{b5}.
+It combines SHAP values that are analytically computed for smaller components of the network and combines them into SHAP values for the whole network. Doing so we are linearising the non linear components of the network and the way in which we do this is uniquely specified by the Shapley values.
+To calculate the expectation needed for SHAP we again have to assume that the input features are independent and that the deep models is linear. 
+Notice that the second assumption is always violated as the point of adding depth to a neural network is that it becomes non-linear.
+Further details on the algorithm are omitted here an can be found in \cite{b2}.
+
 
 \section{Decision and Hoeffding Trees}
 
@@ -302,7 +317,6 @@ Consistent Individualized Feature Attribution for Tree Ensembles. CoRR abs/1802.
 \bibitem{b6} Alexander Binder, Grégoire Montavon, Sebastian Bach, Klaus-Robert Müller, Wojciech Samek: Layer-wise Relevance Propagation for Neural Networks with Local Renormalization Layers. CoRR abs/1604.00825 (2016).
 \bibitem{b7}Anupam Datta, Shayak Sen, Yair Zick: Algorithmic Transparency via Quantitative Input Influence: Theory and Experiments with Learning Systems. IEEE Symposium on Security and Privacy 2016: 598-617.
 \bibitem{b8}Erik Strumbelj, Igor Kononenko: Explaining prediction models and individual predictions with feature contributions. Knowl. Inf. Syst. 41(3): 647-665 (2014).
-\bibitem{b9} https://docs.seldon.io/projects/alibi/en/stable/methods/KernelSHAP.html .
 
 \end{thebibliography}
 
