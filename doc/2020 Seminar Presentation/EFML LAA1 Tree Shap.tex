@@ -120,7 +120,7 @@ Assuming feature independence (equation \ref{independence}) and model linearity 
 f(h_x(z')) &= E[f(z)|z_{S}]\\
 &= E_{z_{\overline{S}}|z_S}[f(z)]\\
 &\approx E_{z_{\overline{S}}}[f(z)] \label{independence}\\ 
-&\approx f([z_S, E[z_{\overline{S}}])  \label{linearity}
+&\approx f([z_S, E[z_{\overline{S}}]])  \label{linearity}
 \end{align}
 It allows you to 
 These are however strong assumptions as most modern models are non-linear and features are in general not independent of each other (e.g. a pixel value only has a meaningful interpretation when put into the context of the surrounding pixels).\\
@@ -136,10 +136,19 @@ Lime is a local linear explanation model that locally approximates the model aro
 Kernel SHAP now chooses $\Omega, \pi$ and $L$ in a way that recovers the Shapely Values (and therefore guarantees the properties missingness, local accuracy and consistency). This is possible because LIME is a additive feature attribution method. This lead to the following equations:
 \begin{align}
 \Omega(g) &= 0\\
-\pi_{x'}(z') &= \frac{(M - 1}{(M choose |z'|)|z'|(M - |z'|)1}\\
+\pi_{x'}(z') &= \frac{(M - 1)}{(M choose |z'|)|z'|(M - |z'|)1}\\
 L(f,g,\pi_{x'}) &= \sum_{z' \in Z}[f(h_x(z')) - g(z')]^2 \pi_{x'}(z')
 \end{align}
-Because the loss is quadratic and $g(z')$ is assumed to be linear we can solve equation \ref{Lime} using linear regression (and calculate the shapely values using weighted linear regression). The input mapping used by LIME is equivalent to equation \ref{linearity} and we can therefore use Kernel SHAP on every model.
+Because the loss is quadratic and $g(z')$ is assumed to be linear we can solve equation \ref{Lime} using linear regression (and calculate the shapely values using weighted linear regression). 
+The input mapping used by LIME is equivalent to equation \ref{linearity} and we can therefore use Kernel SHAP on every model.
+The simplified input mapping $h_x(z')$ that LIME uses is equivalent to equation \ref{linearity} which leads to estimation of the SHAP values.\\
+To summarize Kernel SHAP is a model agnostic algorithm that under the (strong) assumptions model linearity and feature independence approximates the SHAP values. The time complexity of the algorithm is exponential in the number of input features M. In the original paper the time complexity was stated as $O(2^M + M^3)$ \cite{b2}. The ALIBI implementation of the algorithm claims $O(M2^M)$ as time complexity. \cite{b9}\\
+An additional problem that arises in practice is that most models can not handle arbitrary patterns of missing inputs at inference time (which is a requirement to compute the Shapley values).
+Implementation of the algorithm therefore make further approximations by replacing missing features with random values from a background dataset provided by the user (e.g. the training set). 
+Given these severe flaws one can question whether the explanations provided by Kernel SHAP can be trusted in a realistic setting.\\
+Better algorithms for calculating SHAP values for specific model types exist and will be covered in the following subsections:\\
+
+\subsection{Linear SHAP}
 
 \section{Decision and Hoeffding Trees}
 
@@ -293,6 +302,7 @@ Consistent Individualized Feature Attribution for Tree Ensembles. CoRR abs/1802.
 \bibitem{b6} Alexander Binder, Grégoire Montavon, Sebastian Bach, Klaus-Robert Müller, Wojciech Samek: Layer-wise Relevance Propagation for Neural Networks with Local Renormalization Layers. CoRR abs/1604.00825 (2016).
 \bibitem{b7}Anupam Datta, Shayak Sen, Yair Zick: Algorithmic Transparency via Quantitative Input Influence: Theory and Experiments with Learning Systems. IEEE Symposium on Security and Privacy 2016: 598-617.
 \bibitem{b8}Erik Strumbelj, Igor Kononenko: Explaining prediction models and individual predictions with feature contributions. Knowl. Inf. Syst. 41(3): 647-665 (2014).
+\bibitem{b9} https://docs.seldon.io/projects/alibi/en/stable/methods/KernelSHAP.html .
 
 \end{thebibliography}
 
