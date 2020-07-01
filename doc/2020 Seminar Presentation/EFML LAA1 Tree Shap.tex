@@ -13,7 +13,7 @@
     
 \begin{document}
 
-\title{Explaining Tree Models}
+\title{Examining SHAP}
 
 \author{
 	\IEEEauthorblockN{Bernhard Jaeger}
@@ -38,7 +38,7 @@ The reason for this remains unclear.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Tree SHAP, SHAP, Decision Tree, Hoeffding Tree
+Tree SHAP, Kernel SHAP, Decision Tree, Hoeffding Tree
 \end{IEEEkeywords}
 
 \section{Introduction}
@@ -206,78 +206,94 @@ Additionally you can create \textit{SHAP summary plots} which add more detail to
 
 
 \section{Decision and Hoeffding Trees}
+%TODO
 
 
 
+\section{Experiments}
 
+%TODO describe motivation of experiments
 
+\subsection{Setup}
+The dataset we used for our experiments was the UCI Adults dataset \cite{b15}. 
+The objective for this dataset is to predict from demographic data if the person is going to make more than 50.000\$ a year (or not).
+During preprocessing we replaced missing values ("?")  with the most frequent attribute of the respective column.
+People who make less than 50k a year were labelled with 0 and the other once with 1.
+Because the sklearn decision tree implementation does not support mixed type (categorical and numeric) input data we converted categorical values to numerical ones using the sklearn label encoder. 
+This is likely going to lead to worse performance of the model.
+However since we were not interested in building high accuracy models this should not matter.\\
 
+As models we used the DecisionTreeClassifier from sklearn and HoeffdingTreeClassifier from scikit-multiflow.
+For the split criterion we used gini for both models. 
+All the other hyper-parameters did unfortunately not have an overlap between the two libraries. 
+Notably we set the min\_sample\_split parameter of the decision tree to 1000 (which stopped the model from over-fitting) and the leaf\_prediction of the Hoeffding Tree to ``mc'' (because we think that it coincides best with the decision tree).\\
 
+\subsection{Experiments}
 
-
-
-\subsection{Abbreviations and Acronyms}\label{AA}
-Define abbreviations and acronyms the first time they are used in the text, 
-even after they have been defined in the abstract. Abbreviations such as 
-IEEE, SI, MKS, CGS, ac, dc, and rms do not have to be defined. Do not use 
-abbreviations in the title or heads unless they are unavoidable.
-
-\subsection{Equations}
-Number equations consecutively. To make your 
-equations more compact, you may use the solidus (~/~), the exp function, or 
-appropriate exponents. Italicize Roman symbols for quantities and variables, 
-but not Greek symbols. Use a long dash rather than a hyphen for a minus 
-sign. Punctuate equations with commas or periods when they are part of a 
-sentence, as in:
-\begin{equation}
-a+b=\gamma\label{eq}
-\end{equation}
-
-\subsection{\LaTeX-Specific Advice}
-
-Please use ``soft'' (e.g., \verb|\eqref{Eq}|) cross references instead
-of ``hard'' references (e.g., \verb|(1)|). That will make it possible
-to combine sections, add equations, or change the order of figures or
-citations without having to go through the file line by line.
-
-\subsection{Figures and Tables}
-\paragraph{Positioning Figures and Tables} Place figures and tables at the top and 
-bottom of columns. Avoid placing them in the middle of columns. Large 
-figures and tables may span across both columns. Figure captions should be 
-below the figures; table heads should appear above the tables. Insert 
-figures and tables after they are cited in the text. Use the abbreviation 
-``Fig.~\ref{fig}'', even at the beginning of a sentence.
-
-\begin{table}[htbp]
-\caption{Table Type Styles}
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-\hline
-\textbf{Table}&\multicolumn{3}{|c|}{\textbf{Table Column Head}} \\
-\cline{2-4} 
-\textbf{Head} & \textbf{\textit{Table column subhead}}& \textbf{\textit{Subhead}}& \textbf{\textit{Subhead}} \\
-\hline
-copy& More table copy$^{\mathrm{a}}$& &  \\
-\hline
-\multicolumn{4}{l}{$^{\mathrm{a}}$Sample of a Table footnote.}
-\end{tabular}
-\label{tab1}
-\end{center}
-\end{table}
+We then trained both trees on the entire training set (consisting of 32561 data samples).
+Additionally we trained another Hoeffding tree by feeding it each sample individually.
+By plotting the train and test accuracy every 5000 samples we observed that the Hoeffding tree trained on individual samples converged to the Hoeffding tree trained on all data at once. 
+The resulting trees both had the exact (16 digits) same training and test accuracy suggesting that the exact same tree structure has emerged.\\
+Somewhat surprisingly the Decision Tree showed a difference in accuracy compared to the Hoeffding tree (in the configuration described here about 3 percent). 
+Theory tells us that Hoeffding trees should converge towards decision trees given enough data.
+%TODO compute Hoeffding bounds
+We also tried different combinations of hyper parameters (as said before they are quite different between the two libraries) but could not find a setting with similar performance.
+Notably the decision tree heavily overfitted when min\_sample\_split was set to the default value of 2 (almost 0 training error). Increasing it substantially regularized the model until the train and test performance were similar. 
+The Hoeffding tree does not have this parameter and never showed overfitting behaviour.\\
+We then tried to further investigate this behaviour by using the Tree SHAP algorithm to explain what the models look for.\\
+Unfortunately it turned out that the current implementation of the Tree SHAP algorithm \cite{b16} is not compatible with the scikit-multiflow library (or any other library implementing Hoeffding trees).
+This is not a theoretical problem (Tree SHAP works on every tree model), the existing open source libraries are simply incompatible right now.\\
+We therefore used the model agnostic Kernel SHAP algorithm instead to explain the Hoeffding Tree.
+Since the Kernel SHAP as discussed before is really slow we had to restrict the analysis to a background dataset of 50 samples from the training set and calculated the SHAP values for 50 samples of the test set. To stay comparable we used this subset for both algorithms.\\
+Additionally for the Kernel SHAP we set the attribute l1 regularisation to ``num\_features(10)'' as suggested by the library.\\
+We benchmarked the performance of both algorithms using the ipython notebook command \%\%time. Our hardware setup can be found in section \ref{Reproducibility}\\
+Tree SHAP was able to calculate the SHAP values for the Decision Tree in only 15ms wall time.\\
+Even with this small subset of the data Kernel SHAP still needed 4 minutes and 49 seconds wall time.
+For the full test set the algorithm seemed to be intractable.\\
+Using the calculated SHAP values we investigated the models overall using summary bar plots which can be seen in figure \ref{fig1} and figure \ref{fig2}. An individual prediction from the test set is visualized in figure \ref{fig3} and figure \ref{fig4}.\\
 
 \begin{figure}[htbp]
-\centerline{\includegraphics{fig1.png}}
-\caption{Example of a figure caption.}
-\label{fig}
+\centerline{
+	\includegraphics[width=\linewidth]{../fig/ex_01_KernelShap_HoeffdingTree_50_Samples_SummaryPlot.png}
+}
+\caption{Summary plot of a Hoeffding Tree explained with Kernel SHAP using 50 samples}
+\label{fig1}
 \end{figure}
 
-\section{Methodology}
+\begin{figure}[htbp]
+\centerline{
+	\includegraphics[width=\linewidth]{../fig/ex_01_TreeShap_DecisionTree_50_Samples_SummaryPlot.png}
+}
+\caption{Summary plot of a Decision Tree explained with Tree SHAP using 50 samples}
+\label{fig2}
+\end{figure}
 
-\section{Evaluation}
+\begin{figure}[htbp]
+\centerline{
+	\includegraphics[width=\linewidth]{../fig/ex_01_TreeShap_DecisionTree_50_Samples_ForcePlot_sample_1.png}
+}
+\caption{Force plot of a Decision Tree explained with Tree SHAP using 50 samples}
+\label{fig3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centerline{
+	\includegraphics[width=\linewidth]{../fig/ex_01_KernelShap_HoeffdingTree_50_Samples_ForcePlot_sample_1.png}
+}
+\caption{Force plot of a Hoeffding Tree explained with Kernel SHAP using 50 samples}
+\label{fig4}
+\end{figure}
+
+One can clearly see that the two models look for different attributes when making their predictions and even on the attributes they agree upon (like education-num) the magnitude of their importance varies.\\
+Explaining the observation that the Hoeffding tree doesn't necessarily converge to a decision tree in practice remains an open question.
+Some hypothesis we have are: Differences in library implementation, Hoeffding trees assume a stationary distribution (it is unclear if this dataset is stationary), convergence guarantees are only asymptotic so the convergence could be too slow to be observed here.
+
+
 
 \section{Conclusion}
 
-\section{Reproducibility Considerations}
+\section{Reproducibility Considerations} 
+\label{Reproducibility}
 
 \subsection{Software Libraries:}
 The software library versions we used (read out using pip --freeze) are documented in table \ref{softwareVersion}.\\
@@ -372,6 +388,8 @@ Consistent Individualized Feature Attribution for Tree Ensembles. CoRR abs/1802.
 \bibitem{b12}Ando Sabbas. 2014. Interpreting random forests. http://blog.datadive.net/interpreting-random-forests/ Accessed: 2020-06-15
 \bibitem{b13}https://github.com/slundberg/shap Accessed: 2020-06-15
 \bibitem{b14}Katsushige Fujimoto, Ivan Kojadinovic, Jean-Luc Marichal: Axiomatic characterizations of probabilistic and cardinal-probabilistic interaction indices. Games Econ. Behav. 55(1): 72-99 (2006).
+\bibitem{b15}Ronny Kohavi and Barry Becker: Adult Dataset, UCI Machine Learning Repository http://archive.ics.uci.edu/ml
+\bibitem{b16} https://github.com/slundberg/shap/ Accessed: 2020-07-01
 
 \end{thebibliography}
 
