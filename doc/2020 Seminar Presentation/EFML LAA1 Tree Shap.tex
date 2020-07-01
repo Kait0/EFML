@@ -286,14 +286,73 @@ Using the calculated SHAP values we investigated the models overall using summar
 
 One can clearly see that the two models look for different attributes when making their predictions and even on the attributes they agree upon (like education-num) the magnitude of their importance varies.\\
 Explaining the observation that the Hoeffding tree doesn't necessarily converge to a decision tree in practice remains an open question.
-Some hypothesis we have are: Differences in library implementation, Hoeffding trees assume a stationary distribution (it is unclear if this dataset is stationary), convergence guarantees are only asymptotic so the convergence could be too slow to be observed here.
+Some hypothesis we have are: Differences in library implementation, Hoeffding trees assume a stationary distribution (it is unclear if this dataset is stationary), convergence guarantees are only asymptotic so the convergence could be too slow to be observed here.\\
 
+We used the Kernel SHAP algorithm to explain the Hoeffding tree here. Since Kernel SHAP only approximates the SHAP values one natural question one might ask is how large the difference is to the exact SHAP values.
+Fortunately we with Tree SHAP we are now able to create a ground truth to compare the output to (at least for trees).\\
+We therefore conducted a second experiment to get an empirical answer (or intuition) to this question.
+We have trained a decision tree on adults just like in the last experiment. 
+We now calculate the SHAP values for the decision tree both algorithms. 
+Since Kernel SHAP ran faster on the decision tree we increased the number of test and background samples to 100 on both algorithms for comparison.
+Additionally we used Tree SHAP to calculate the Shapely Values for the entire Test set using the entire training set as background data.
+Tree SHAP on the entire test set ran in only 2.25 seconds wall time. On the 100 sub-samples it took 22.1 ms wall time and Kernel SHAP needed 1 minute 13 seconds wall time to finish it's computation.
+The summary plots can be seen in figure \ref{fig5}, \ref{fig6}, \ref{fig7}.
+
+\begin{figure}[htbp]
+\centerline{
+	\includegraphics[width=\linewidth]{../fig/ex_02_TreeShap_16281_Samples_SummaryPlot.png}
+}
+\caption{Summary plot of a decision tree explained with Tree SHAP over 16281 samples}
+\label{fig5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centerline{
+	\includegraphics[width=\linewidth]{../fig/ex_02_TreeShap_100_Samples_SummaryPlot.png}
+}
+\caption{Summary plot of a decision tree explained with Tree SHAP over 100 samples}
+\label{fig6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centerline{
+	\includegraphics[width=\linewidth]{../fig/ex_02_KernelShap_100_Samples_SummaryPlot.png}
+}
+\caption{Summary plot of a decision tree explained with Kernel SHAP over 100 samples}
+\label{fig7}
+\end{figure}
+
+Examining the summary plots one can see that through only using 100 samples we don't seem to loose a lot. Most features have similar importance and only capital-gain changed significantly.\\
+Also the kernel SHAP algorithm looks like a reasonable approximation with only education-num changing significantly. 
+The features that don't contribute much in the Tree SHAP plot also don't contribute much in Kernel SHAP.\\
+On an individual example like shown in figures \ref{fig8} and \ref{fig9} the quantitative value of the SHAP values can be quite off even though the features that are considered stay roughly the same.\\
+Observe that figure \ref{fig8} and \ref{fig3} are unsurprisingly the same because the samples used only has an impact on the average values not on the individual attributions.
+
+\begin{figure}[htbp]
+\centerline{
+	\includegraphics[width=\linewidth]{../fig/ex_02_TreeShap_100_Samples_ForcePlot_sample_1.png}
+}
+\caption{Force plot of a decision tree explained with Tree SHAP over 100 samples}
+\label{fig8}
+\end{figure}
+
+\begin{figure}[htbp]
+\centerline{
+	\includegraphics[width=\linewidth]{../fig/ex_02_KernelShap_100_Samples_ForcePlot_sample_1.png}
+}
+\caption{Force plot of a decision tree explained with Kernel SHAP over 100 samples}
+\label{fig9}
+\end{figure}
 
 
 \section{Conclusion}
 
 \section{Reproducibility Considerations} 
 \label{Reproducibility}
+
+In the following we list the software and hardware used for doing our experiments. 
+All experiments were conducted on the same machine.
+The code will be release on github at \cite{b17}.
 
 \subsection{Software Libraries:}
 The software library versions we used (read out using pip --freeze) are documented in table \ref{softwareVersion}.\\
@@ -390,6 +449,7 @@ Consistent Individualized Feature Attribution for Tree Ensembles. CoRR abs/1802.
 \bibitem{b14}Katsushige Fujimoto, Ivan Kojadinovic, Jean-Luc Marichal: Axiomatic characterizations of probabilistic and cardinal-probabilistic interaction indices. Games Econ. Behav. 55(1): 72-99 (2006).
 \bibitem{b15}Ronny Kohavi and Barry Becker: Adult Dataset, UCI Machine Learning Repository http://archive.ics.uci.edu/ml
 \bibitem{b16} https://github.com/slundberg/shap/ Accessed: 2020-07-01
+\bibitem{b17} https://github.com/Kait0/EFML
 
 \end{thebibliography}
 
