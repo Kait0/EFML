@@ -358,6 +358,17 @@ Observe that figure \ref{fig8} and \ref{fig3} are unsurprisingly the same becaus
 
 \section{Conclusion}
 \label{Conclusion}
+We have seen that multiple current methods that aim to explain machine learning models can be categorized as additive feature attribution methods. 
+These kind of methods can have three desirable properties: Local Accuracy, Missingness and Consistency.
+It can be shown that the only solution to additive feature attribution methods that satisfy all 3 properties are the shapely values.
+Through the SHAP framework one can approximate or compute them using algorithms like Kernel SHAP, Linear SHAP, Deep SHAP or Tree SHAP.
+Using the Tree SHAP and Kernel SHAP algorithm we investigated the following questions:
+\begin{itemize}
+	\item Q: How good is the approximation of SHAP values computed by Kernel SHAP?\\
+		  A: In our experiments we observed that the approximation of SHAP values for most feature was close to the true values. On a few features significant differences were observed.  
+	\item Q: How fast do Hoeffding trees converge towards Decision Trees?\\
+		  A: In our experiments we could not observe convergence. The reason for this remains an open question.
+\end{itemize}
 
 \section{Reproducibility Considerations} 
 \label{Reproducibility}
@@ -365,10 +376,8 @@ Observe that figure \ref{fig8} and \ref{fig3} are unsurprisingly the same becaus
 In the following we list the software and hardware used for doing our experiments. 
 All experiments were conducted on the same machine.
 The code will be release on github at \cite{b17}.
-
-\subsection{Software Libraries:}
 The software library versions we used (read out using pip --freeze) are documented in table \ref{softwareVersion}.\\
-All experiments were conducted on a single personal computer. The hardware specs can be found in table \ref{hardware}.\\
+ The hardware specs can be found in table \ref{hardware}.\\
 
 
 %TODO this are too many remove the uneccesary once.
