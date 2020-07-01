@@ -13,7 +13,7 @@
     
 \begin{document}
 
-\title{Examining SHAP}
+\title{Examining the SHAP framework}
 
 \author{
 	\IEEEauthorblockN{Bernhard Jaeger}
@@ -35,6 +35,7 @@ We use the SHAP framework to investigate the relationship between Decision Trees
 Theory tells us that a Hoeffding Tree should converge towards a Decision Tree when trained. 
 In our experiments however we could not observe convergence. 
 The reason for this remains unclear.
+We also use the Tree SHAP algorithm as a ground truth to empirically examine the approximation error made by Kernel SHAP.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -42,10 +43,19 @@ Tree SHAP, Kernel SHAP, Decision Tree, Hoeffding Tree
 \end{IEEEkeywords}
 
 \section{Introduction}
-This . This  and \cite{b3} document is a model and instructions for \LaTeX.
-Please observe the conference page limits. 
+
+Being able to explain why a model makes a certain decision can be just as important as the models performance in areas where trust in a prediction is essential. However a lot of powerful modern algorithms like tree ensembles can be hard to interpret given their black-box nature. Multiple of the current methods that try to explain machine learning algorithms can be categorized in the class of 
+additive feature attribution methods which we will introduce in section \ref{AFAM}. Surprisingly it turns out that they have a unique solution namely the SHAP values. We will discuss them in section \ref{SHAP} and present multiple algorithms and concepts related to them. Following that we will briefly discuss the tree models used in our experiments in section \ref{Trees}.\\
+Additionally in this work we empirically investigated the following questions using the novel Tree SHAP algorithm:
+\begin{itemize}
+	\item How good is the approximation of SHAP values computed by Kernel SHAP?
+	\item How fast do Hoeffding trees converge towards Decision Trees?
+\end{itemize}
+The experimental setup and results are described in section \ref{Experiments} and further information for reproducibility can be found in section \ref{Reproducibility}.
+Our findings will be summarized in section \ref{Conclusion}.
 
 \section{Additive Feature Attribution methods}
+\label{AFAM}
 Modern models of Machine Learning have become increasingly complex making it hard to explain their decisions.
 To address this challenge we can go one layer of abstraction further and make a model of the model which we want to be simple enough to be interpretable again.
 In \cite{b2} they coined the term explanation model for this approach of using an interpretable approximation of the original model.\\
@@ -99,6 +109,7 @@ In the next section we will introduce the SHAP framework which tries to unify th
 %TODO check these statements after writing the next section.
 
 \section{SHAP values}
+\label{SHAP}
 %TODO mention global interpretations
 SHAP (SHapley Additive exPlanations) values \cite{b2} are obtained by solving equation \ref{ShapleyEquation} using a conditional expectation function of the original model:
 \begin{align}
@@ -206,12 +217,12 @@ Additionally you can create \textit{SHAP summary plots} which add more detail to
 
 
 \section{Decision and Hoeffding Trees}
+\label{Trees}
 %TODO
 
 
-
 \section{Experiments}
-
+\label{Experiments}
 %TODO describe motivation of experiments
 
 \subsection{Setup}
@@ -346,6 +357,7 @@ Observe that figure \ref{fig8} and \ref{fig3} are unsurprisingly the same becaus
 
 
 \section{Conclusion}
+\label{Conclusion}
 
 \section{Reproducibility Considerations} 
 \label{Reproducibility}
@@ -420,16 +432,6 @@ All experiments were conducted on a single personal computer. The hardware specs
 \end{center}
 \end{table}
 
-
-
-
-
-\section*{Acknowledgment}
-
-The preferred spelling of the word ``acknowledgment'' in America is without 
-an ``e'' after the ``g''. Avoid the stilted expression ``one of us (R. B. 
-G.) thanks $\ldots$''. Instead, try ``R. B. G. thanks$\ldots$''. Put sponsor 
-acknowledgments in the unnumbered footnote on the first page.
 
 \begin{thebibliography}{00}
 \bibitem{b1} Scott M. Lundberg, Gabriel G. Erion, Su-In Lee:
