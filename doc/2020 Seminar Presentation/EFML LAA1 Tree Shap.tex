@@ -28,10 +28,10 @@
 
 \begin{abstract}
 Understanding the decisions made by machine learning models can be challenging due to their black box nature.
-We investigate the additive feature attribution method SHAP (SHapley Additive exPlanations) that addresses this problem \cite{b2}. 
-While SHAP can be used to explain the decisions of any model, the generic KernelSHAP algorithm for it can be intractable for larger datasets. 
-For tree models there exists a specialized algorithm (Tree SHAP) that can compute exact SHAP values in polynomial time \cite{b1}. 
-We use the SHAP framework to investigate the relationship between Decision Trees and Hoeffding Trees\cite{b3}. 
+We investigate the additive feature attribution method SHAP (SHapley Additive exPlanations) that addresses this problem. 
+Computing the shapley values which they are based on is in general NP-hard and can only be approximated with algorithms like Kernel SHAP.
+For tree models there exists a specialized algorithm (Tree SHAP) that can compute exact SHAP values in polynomial time. 
+We use the SHAP framework to investigate the relationship between Decision Trees and Hoeffding Trees. 
 Theory tells us that a Hoeffding Tree should converge towards a Decision Tree when trained. 
 In our experiments however we could not observe convergence. 
 The reason for this remains unclear.
@@ -45,8 +45,8 @@ Tree SHAP, Kernel SHAP, Decision Tree, Hoeffding Tree
 \section{Introduction}
 
 Being able to explain why a model makes a certain decision can be just as important as the models performance in areas where trust in a prediction is essential. However a lot of powerful modern algorithms like tree ensembles can be hard to interpret given their black-box nature. Multiple of the current methods that try to explain machine learning algorithms can be categorized in the class of 
-additive feature attribution methods which we will introduce in section \ref{AFAM}. Surprisingly it turns out that they have a unique solution namely the SHAP values. We will discuss them in section \ref{SHAP} and present multiple algorithms and concepts related to them. Following that we will briefly discuss the tree models used in our experiments in section \ref{Trees}.\\
-Additionally in this work we empirically investigated the following questions using the novel Tree SHAP algorithm:
+additive feature attribution methods which we will introduce in section \ref{AFAM}. Surprisingly it turns out that they have a unique solution namely the SHAP values. We will discuss them in section \ref{SHAP} and present multiple algorithms and concepts related to them. Following that we will briefly introduce the tree models used in our experiments in section \ref{Trees}.\\
+Additionally in this work we empirically investigated the following questions using the Tree SHAP algorithm:
 \begin{itemize}
 	\item How good is the approximation of SHAP values computed by Kernel SHAP?
 	\item How fast do Hoeffding trees converge towards Decision Trees?
@@ -75,9 +75,9 @@ Additive Feature Attribution methods can have 3 desirable theoretical properties
 
 \textbf{Local Accuracy}: \\
 \begin{align}
-f(x) = g(x') when x = h_x(x') and \phi_0 = f(h_x(0))
+f(x) = g(x') \text{ when } x = h_x(x') \text{ and } \phi_0 = f(h_x(0))
 \end{align}
-The intuition being that the explanation model should match the original model for the simplified input (notice $x' = z'$ here). \\
+The intuition being that the explanation models output should match the original model for the simplified input (notice $x' = z'$ here). \\
 
 \textbf{Missingness}: \\
 \begin{align}
@@ -86,31 +86,29 @@ x'_i = 0 \rightarrow \phi_i = 0
 The intuition is that feature missing in the original input may have no impact even if they are present in the simplified version. (Notice that even if $x' = 0$, $z'$ does not necessarily have to be 0).\\
 
 \textbf{Consistency}: \\
-$f_x(z') := f(h_x(z'))$, and let $z' \setminus i$ be $z'_i = 0$\\
+Be $f_x(z') := f(h_x(z'))$, and $z' \setminus i$ mean $z'_i = 0$\\
 For any two models f and f', if:
 \begin{align}
 f'_x(z') - f'_x(z' \setminus i) \geq f_x(z') - f_x(z' \setminus i)
 \end{align}
-for all inputs $z' \in {0,1}^M$. \\
-Meaning that the model changes in a way that some simplified input's contribution becomes larger.\\
+for all inputs $z' \in \{0,1\}^M$. \\
+Meaning that if the model changes in a way that some simplified input's contribution becomes larger.\\
 Then: $ \phi_i(f', x) \geq \phi_i(f,x)$ \\
 Meaning that it's inputs attribution should not become smaller.\\
 
-Now it turns out that the only possible features for an Additive Feature attribution method that satisfies all 3 properties are the Shapley values defined as:\\
+Now it turns out that the only possible features for an additive feature attribution method that satisfies all 3 properties are the Shapley values defined as:\\
 \begin{align}\label{ShapleyEquation}
 \phi_i(f, x) = \sum_{z' \subseteq x'} \frac{|z'|!(M - |z'| - 1)!}{M!}[f_x(z') - f_x(z' \setminus i)]
 \end{align}
 $z' \subseteq x'$ are all $z'$ vectors where the non-zero entries are a subset of the non-zero entries in $x'$.\\
 $|z'|$ represents the number of non-zero entries in $z'$.\\
 
-This means that at least in theory Additive Feature Attribution methods using Shapley Values as effects are to be preferred over other methods. 
-In practice methods using shapely values can be intractable for larger sets.\\
-In the next section we will introduce the SHAP framework which tries to unify these measures of feature importance.
-%TODO check these statements after writing the next section.
+This means that at least in theory additive feature attribution methods using Shapley values as effects are to be preferred over other methods. 
+Unfortunately computing the exact Shapely values is in general NP-hard. \cite{b20}\\
+In the next section we will introduce the SHAP framework which tries to unify these measures of feature importance and algorithms that try to deal with this problem.
 
 \section{SHAP values}
 \label{SHAP}
-%TODO mention global interpretations
 SHAP (SHapley Additive exPlanations) values \cite{b2} are obtained by solving equation \ref{ShapleyEquation} using a conditional expectation function of the original model:
 \begin{align}
 f(h_x(z')) = E[f(z) | z_S]
@@ -121,44 +119,44 @@ The mapping function is therefore implicitly defined as:\\
 h_x(z') = z_S
 \end{align}
 $z_S$ has missing values for features not in the set S.\\
-One problem with this approach is that in general models don't can't necessarily handle features that are just missing.\\
-To address this issue $f(z_S)$ can be approximated with $E[f(z)| z_S].$\\
+Since models can not in general handle missing inputs $f(z_S)$ is approximated with $E[f(z)| z_S]$ in SHAP.\\
 The intuition being that SHAP values  calculate the attribution (or effect) of each feature using the change in expectation of the model prediction when you condition on that feature. 
 The feature $\phi_0 = E[f(z)]$ is the base value or the prediction the model would make if it had no observation. 
 The following $\phi_i$ are then calculated by conditioning on some input features and averaging over all possible orderings of them.
-As hinted already earlier the exact computation of SHAP values can be challenging as it requires to calculate combinatory many expectations. 
-Assuming feature independence (equation \ref{independence}) and model linearity (equation \ref{linearity}) can make the computation much easier. 
+As mentioned already earlier the exact computation of SHAP values can be challenging. 
+Assuming feature independence (equation \ref{independence}) and model linearity (equation \ref{linearity}) one can make the computation much easier. 
 \begin{align}
 f(h_x(z')) &= E[f(z)|z_{S}]\\
 &= E_{z_{\overline{S}}|z_S}[f(z)]\\
 &\approx E_{z_{\overline{S}}}[f(z)] \label{independence}\\ 
 &\approx f([z_S, E[z_{\overline{S}}]])  \label{linearity}
 \end{align}
-It allows you to 
-These are however strong assumptions as most modern models are non-linear and features are in general not independent of each other (e.g. a pixel value only has a meaningful interpretation when put into the context of the surrounding pixels).\\
-In the following subsections we will discuss algorithms for computing SHAP values.
+These are strong assumptions as a lot of models are non-linear and features are in general not independent of each other (e.g. a pixel value only has a meaningful interpretation when put into the context of the surrounding pixels).\\
+In the following subsections we will discuss algorithms for computing or approximating SHAP values.
 
 \subsection{Kernel SHAP (Linear Lime + Shapely Value)}
 Kernel SHAP \cite{b2} is the only method presented here that can be applied to any model.
-Linear Lime is a method that minimizes the following objective function:
+It is based on linear Lime which is a method that minimizes the following objective function:
 \begin{align}
 \xi = \argmin_{g \in G} L(f,g,\pi_{x'}) + \Omega(g) \label{Lime}
 \end{align}
-Lime is a local linear explanation model that locally approximates the model around a given prediction.
-Kernel SHAP now chooses $\Omega, \pi$ and $L$ in a way that recovers the Shapely Values (and therefore guarantees the properties missingness, local accuracy and consistency). This is possible because LIME is a additive feature attribution method. This lead to the following equations:
+Where L is a loss function, omega a regularisation term and $\pi_{x'}$ a local kernel weighting the simplified inputs.
+Lime is a linear explanation model that locally approximates the model around a given prediction.
+Kernel SHAP now chooses $\Omega, \pi$ and $L$ in a way that recovers the Shapely Values (and therefore guarantees the properties missingness, local accuracy and consistency). This is possible because LIME is a additive feature attribution method. It lead to the following equations:
 \begin{align}
 \Omega(g) &= 0\\
-\pi_{x'}(z') &= \frac{(M - 1)}{(M choose |z'|)|z'|(M - |z'|)1}\\
+\pi_{x'}(z') &= \frac{(M - 1)}{(M \text{ } choose \text{ } |z'|)|z'|(M - |z'|)}\\
 L(f,g,\pi_{x'}) &= \sum_{z' \in Z}[f(h_x(z')) - g(z')]^2 \pi_{x'}(z')
 \end{align}
 Because the loss is quadratic and $g(z')$ is assumed to be linear we can solve equation \ref{Lime} using linear regression (and calculate the shapely values using weighted linear regression). 
-The input mapping used by LIME is equivalent to equation \ref{linearity} and we can therefore use Kernel SHAP on every model.
-The simplified input mapping $h_x(z')$ that LIME uses is equivalent to equation \ref{linearity} which leads to estimation of the SHAP values.\\
-To summarize Kernel SHAP is a model agnostic algorithm that under the (strong) assumptions model linearity and feature independence approximates the SHAP values. The time complexity of the algorithm is exponential in the number of input features M : $O(M2^M)$\cite{b2}.\\
+The simplified input mapping $h_x(z')$ used by LIME is equivalent to equation \ref{linearity} and we can therefore use Kernel SHAP to estimate the SHAP values on every model.\\
+To summarize Kernel SHAP is a model agnostic algorithm that under the assumptions model linearity and feature independence approximates the SHAP values. The time complexity of the algorithm is exponential in the number of input features M : $O(M2^M)$\cite{b2}.\\
 An additional problem that arises in practice is that most models can not handle arbitrary patterns of missing inputs at inference time (which is a requirement to compute the Shapley values).
 Implementation of the algorithm therefore make further approximations by replacing missing features with random values from a background dataset provided by the user (e.g. the training set). 
-Given these severe flaws one can question whether the explanations provided by Kernel SHAP can be trusted in a realistic setting.\\
-Better algorithms for calculating SHAP values for specific model types exist. Some of which will be covered in the following subsections:\\
+%TODO recheck statement
+Given these limitations one can question whether the explanations provided by Kernel SHAP can be trusted in a realistic setting.\\
+Better algorithms for calculating SHAP values for specific model types exist. 
+Some of which will be covered in the following subsections:\\
 
 \subsection{Linear SHAP}
 For a linear model $f(x) = \sum_{j=1}^M w_j x_j + b$ you can approximate the SHAP values by only assuming feature independence (equation \ref{independence}).
@@ -167,7 +165,7 @@ The features will then be:
 \phi_0(f,x) = b
 \phi_i(f,x) = w_j(x_j - E[x_j]) 
 \end{align}
-Notice that the difference to just looking at the weights is that Linear SHAP takes the difference to the baseline into account.
+Notice that a difference to just looking at the weights is that Linear SHAP takes the difference to the baseline into account.
 
 \subsection{Deep SHAP}
 Deep SHAP \cite{b2} is an algorithm that combines shapely values with DeepLIFT \cite{b5}.
@@ -177,7 +175,7 @@ Notice that the second assumption is always violated as the point of adding dept
 Further details on the algorithm are omitted here an can be found in \cite{b2}.
 
 \subsection{Tree SHAP}
-The previously discussed algorithms were all approximations of the SHAP values. The Tree SHAP \cite{b1} algorithm is able to compute \textbf{exact} SHAP values in \textbf{polynomial} time complexity: $O(TLD^2)$. 
+The previously discussed algorithms were all approximations of the SHAP values. The Tree SHAP \cite{b1} algorithm is able to compute \textbf{exact} SHAP values in \textbf{polynomial} time complexity for tree ensemble methods: $O(TLD^2)$. 
 T here is the number of trees in the ensemble, L is the maximum number of leaves in any of the trees and D is the maximum depth of any of these trees. 
 This means that the algorithm is tractable even for high dimensional data (which Kernel Shap due to the exponential time complexity is not).\\
 Global feature importance of trees can also be computed with methods based on Gain \cite{b9}, Split Count \cite{b10} or Permutations \cite{b11} and locally using Sabbas \cite{b12}.
@@ -187,6 +185,11 @@ The intuition of the algorithm is that it is recursively tracking the proportion
 Doing so the algorithm requires polynomial memory in the order $O(D^2 + M)$.
 The algorithm is applicable to trees and sums of trees (which uses the fact that SHAP values of two functions added together is the sum of their individual SHAP values).\\
 Note that Tree SHAP does \textbf{not} require the additional assumptions model linearity and feature independence that we had to make earlier. The algorithmic description in pseudo code can be found in \cite{b1} and an open source implementation is available at \cite{b13}.\\
+The issue of missing features is addressed by approximating $f(x_S)$ using path dependent feature perturbations using the coverage information of the tree on which training samples went down which path in the tree.
+This has the advantage that there is no need to provide the algorithm a background dataset.
+Another variant of this algorithm uses causal interventions to exactly compute $f(x_S)$ with $E[f(X)|do(X_S = x_S)]$ \cite{b19}. 
+It requires a background dataset (usually the training set) and scales linearly with the number of background samples N: $O(TLDN)$.\\
+When we refer to Tree SHAP in the following we refer to the second version.\\
 
 Now that we have a tool to precisely calculate SHAP values we can both globally for an entire dataset and locally on an individual sample inspect the importance of each feature as learned by the tree model gain insight into the model behaviour and potentially even the underlying problem if the model is good.
 This analysis can even be further expanded be calculating SHAP interaction values covered next.
@@ -209,9 +212,8 @@ Another interesting application of the individual feature attributions obtained 
 Fluctuations in the features value are also only considered if they are relevant for our (supervised) model.
 
 \subsection{SHAP plots}
-%TODO after you added some plots to the paper cite them here as examples.
 Now there are multiple ways to visualize the explanations generated by the SHAP framework \cite{b1}.
-The most traditional would be a bar chart where the global importance of each feature is plotted as absolute value. To plot the effects of a single example one can plot for example on a line how much each feature pushed the prediction of the model away from the baseline.\\
+The most traditional would be a bar chart where the global importance of each feature is plotted as absolute value (e.g. figure \ref{fig1}). To plot the effects of a single example one can plot for example on a line how much each feature pushed the prediction of the model away from the baseline (e.g. figure \ref{fig3}).\\
 Additionally you can create \textit{SHAP summary plots} which add more detail to the global view. In these features are again sorted by importance each individual attribution is then plotted as a dot plotted horizontally where the x axis show the SHAP value (effect). If multiple dots have the same SHAP value they get stacked creating an effect similar to violin plots. The actual feature value is then encoded through color.\\
 \textit{SHAP dependence plots} are another visual tool where the SHAP value of a feature is plotted axis against it's feature value on the x-axis. The individual points of the test set are then displayed like a scatter plot. An additional value of a different feature can be encoded in the color of the dots.
 
@@ -220,7 +222,7 @@ Additionally you can create \textit{SHAP summary plots} which add more detail to
 \label{Trees}
 Hoeffding trees \cite{b3} are a version of a Decision Tree that can be trained over time. Instead of needing all examples at once during training, they can be fed into the algorithm piece by piece for example as a stream in a database mining environment.
 It's advantages are that it can be trained in constant time per example while converging towards the tree that an algorithm would learn if it had all data available at once with exponential decaying probability.\\
-Decision trees on which hoeffding trees are based test an input at every node of the tree is tested on an attribute and depending on the result passed down to one of the branches of the nodes.
+Decision trees, on which hoeffding trees are based, test an input at every node of the tree on an attribute and depending on the result pass it down to one of the branches of the nodes.
 It finally ends up in a leaf where it is assigned a class label. 
 The test at each leave is usually based on maximising some heuristic criterion like entropy or gini.
 Training works by recursively replacing leaves by test nodes. 
@@ -261,7 +263,6 @@ By plotting the train and test accuracy every 5000 samples we observed that the 
 The resulting trees both had the exact (16 digits) same training and test accuracy suggesting that the exact same tree structure has emerged.\\
 Somewhat surprisingly the Decision Tree showed a difference in accuracy compared to the Hoeffding tree (in the configuration described here about 3 percent). 
 Theory tells us that Hoeffding trees should converge towards decision trees given enough data.
-%TODO compute Hoeffding bounds
 We also tried different combinations of hyper parameters (as said before they are quite different between the two libraries) but could not find a setting with similar performance.
 Notably the decision tree heavily overfitted when min\_sample\_split was set to the default value of 2 (almost 0 training error). Increasing it substantially regularized the model until the train and test performance were similar. 
 The Hoeffding tree does not have this parameter and never showed overfitting behaviour.\\
@@ -314,7 +315,7 @@ Explaining the observation that the Hoeffding tree doesn't necessarily converge 
 Some hypothesis we have are: Differences in library implementation, Hoeffding trees assume a stationary distribution (it is unclear if this dataset is stationary), convergence guarantees are only asymptotic so the convergence could be too slow to be observed here.\\
 
 We used the Kernel SHAP algorithm to explain the Hoeffding tree here. Since Kernel SHAP only approximates the SHAP values one natural question one might ask is how large the difference is to the exact SHAP values.
-Fortunately we with Tree SHAP we are now able to create a ground truth to compare the output to (at least for trees).\\
+Fortunately with Tree SHAP we are now able to create a ground truth to compare the output to (at least for trees).\\
 We therefore conducted a second experiment to get an empirical answer (or intuition) to this question.
 We have trained a decision tree on adults just like in the last experiment. 
 We now calculate the SHAP values for the decision tree both algorithms. 
@@ -429,8 +430,6 @@ The software library versions we used (read out using pip --freeze) are document
 	scipy & 1.3.1\\ \hline
 	shap & 0.35.0\\ \hline
 	sklearn & 0.0\\ \hline
-	torch & 1.5.0+cu101\\ \hline
-	torchvision & 0.6.0+cu101  \\ \hline
 	
 \end{tabular}
 \label{softwareVersion}
@@ -476,6 +475,8 @@ Consistent Individualized Feature Attribution for Tree Ensembles. CoRR abs/1802.
 \bibitem{b16} https://github.com/slundberg/shap/ Accessed: 2020-07-01
 \bibitem{b17} https://github.com/Kait0/EFML
 \bibitem{b18} W. Hoeffding Probability inequalities for sums of bounded random variables. Journal of the American Statistical Association, 58:13-30, 1963.
+\bibitem{b19} Lundberg, Scott M. and Erion, Gabriel and Chen, Hugh and DeGrave, Alex and Prutkin, Jordan M. and Nair, Bala and Katz, Ronit and Himmelfarb, Jonathan and Bansal, Nisha and Lee, Su-In, From local explanations to global understanding with explainable AI for trees, Nature Machine Intelligence 2020, volume 2, number 1 pages 2522-5839
+\bibitem{b20} Yasuko Matsui, Tomomi Matsui: NP-completeness for calculating power indices of weighted majority games. Theor. Comput. Sci. 263(1-2): 305-310 (2001)
 
 
 \end{thebibliography}
