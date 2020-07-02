@@ -13,7 +13,7 @@
     
 \begin{document}
 
-\title{Examining the SHAP framework}
+\title{Examining Hoeffding Trees with SHAP}
 
 \author{
 	\IEEEauthorblockN{Bernhard Jaeger}
@@ -294,21 +294,21 @@ Using the calculated SHAP values we investigated the models overall using summar
 \label{fig2}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centerline{
-	\includegraphics[width=\linewidth]{../fig/ex_01_TreeShap_DecisionTree_50_Samples_ForcePlot_sample_1.png}
+	\includegraphics[width=\textwidth]{../fig/ex_01_TreeShap_DecisionTree_50_Samples_ForcePlot_sample_1.png}
 }
 \caption{Force plot of a Decision Tree explained with Tree SHAP using 50 samples}
 \label{fig3}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centerline{
-	\includegraphics[width=\linewidth]{../fig/ex_01_KernelShap_HoeffdingTree_50_Samples_ForcePlot_sample_1.png}
+	\includegraphics[width=\textwidth]{../fig/ex_01_KernelShap_HoeffdingTree_50_Samples_ForcePlot_sample_1.png}
 }
 \caption{Force plot of a Hoeffding Tree explained with Kernel SHAP using 50 samples}
 \label{fig4}
-\end{figure}
+\end{figure*}
 
 One can clearly see that the two models look for different attributes when making their predictions and even on the attributes they agree upon (like education-num) the magnitude of their importance varies.\\
 Explaining the observation that the Hoeffding tree doesn't necessarily converge to a decision tree in practice remains an open question.
@@ -354,21 +354,21 @@ The features that don't contribute much in the Tree SHAP plot also don't contrib
 On an individual example like shown in figures \ref{fig8} and \ref{fig9} the quantitative value of the SHAP values can be quite off even though the features that are considered stay roughly the same.\\
 Observe that figure \ref{fig8} and \ref{fig3} are unsurprisingly the same because the samples used only has an impact on the average values not on the individual attributions.
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centerline{
-	\includegraphics[width=\linewidth]{../fig/ex_02_TreeShap_100_Samples_ForcePlot_sample_1.png}
+	\includegraphics[width=\textwidth]{../fig/ex_02_TreeShap_100_Samples_ForcePlot_sample_1.png}
 }
 \caption{Force plot of a decision tree explained with Tree SHAP over 100 samples}
 \label{fig8}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centerline{
-	\includegraphics[width=\linewidth]{../fig/ex_02_KernelShap_100_Samples_ForcePlot_sample_1.png}
+	\includegraphics[width=\textwidth]{../fig/ex_02_KernelShap_100_Samples_ForcePlot_sample_1.png}
 }
 \caption{Force plot of a decision tree explained with Kernel SHAP over 100 samples}
 \label{fig9}
-\end{figure}
+\end{figure*}
 
 
 \section{Conclusion}
