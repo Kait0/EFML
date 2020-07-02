@@ -216,10 +216,24 @@ Additionally you can create \textit{SHAP summary plots} which add more detail to
 \textit{SHAP dependence plots} are another visual tool where the SHAP value of a feature is plotted axis against it's feature value on the x-axis. The individual points of the test set are then displayed like a scatter plot. An additional value of a different feature can be encoded in the color of the dots.
 
 
-\section{Decision and Hoeffding Trees}
+\section{Hoeffding Trees}
 \label{Trees}
-%TODO
-
+Hoeffding trees \cite{b3} are a version of a Decision Tree that can be trained over time. Instead of needing all examples at once during training, they can be fed into the algorithm piece by piece for example as a stream in a database mining environment.
+It's advantages are that it can be trained in constant time per example while converging towards the tree that an algorithm would learn if it had all data available at once with exponential decaying probability.\\
+Decision trees on which hoeffding trees are based test an input at every node of the tree is tested on an attribute and depending on the result passed down to one of the branches of the nodes.
+It finally ends up in a leaf where it is assigned a class label. 
+The test at each leave is usually based on maximising some heuristic criterion like entropy or gini.
+Training works by recursively replacing leaves by test nodes. 
+Classic version of decision trees like CART \cite{b9} need all training examples to be available at the same time and are therefore limited by the size of the main memory.
+However in order to find the best criterion to split at a given node it might already be sufficient to only look at a small amount of training samples. Deciding how many examples are needed until you make a decision can be done using a result from statistics known as the Hoeffding bound \cite{b18}.
+It supposes we have made n independent observations over a real valued random variable r (of range R).
+Then with probability $ 1 - \delta $ the true mean of the variable is at most $\epsilon$ away from the empirical mean:
+\begin{align}
+\epsilon = \sqrt{\frac{R^2 ln(\frac{1}{\delta})}{2n}}
+\end{align}
+The hoeffding tree algorithm now uses this bound to make the decision of how many samples to accumulate before splitting on an attribute.
+It guarantees asymptotic convergence towards a batch learned tree. \cite{b3}\\
+In the following sections we take a look at a hoeffding trees behaviour in an empirical fashion.
 
 \section{Experiments}
 \label{Experiments}
@@ -461,6 +475,8 @@ Consistent Individualized Feature Attribution for Tree Ensembles. CoRR abs/1802.
 \bibitem{b15}Ronny Kohavi and Barry Becker: Adult Dataset, UCI Machine Learning Repository http://archive.ics.uci.edu/ml
 \bibitem{b16} https://github.com/slundberg/shap/ Accessed: 2020-07-01
 \bibitem{b17} https://github.com/Kait0/EFML
+\bibitem{b18} W. Hoeffding Probability inequalities for sums of bounded random variables. Journal of the American Statistical Association, 58:13-30, 1963.
+
 
 \end{thebibliography}
 
